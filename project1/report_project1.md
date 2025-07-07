@@ -541,7 +541,6 @@ def key_sensitivity_test():
 project1/
 ├── sm4.py                 # 主实现文件
 ├── report_project1.md     # 项目报告
-├── test_sm4.py           # 测试文件
 └── README.md             # 使用说明
 ```
 
