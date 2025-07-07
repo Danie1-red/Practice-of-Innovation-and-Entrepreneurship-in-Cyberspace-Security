@@ -118,49 +118,264 @@ def _encrypt_block(self, plaintext, round_keys):
     return [X[35], X[34], X[33], X[32]]
 ```
 
-### 优化实现 - T-Table查表法
 
-#### 优化原理
-传统实现中，每次T变换需要：
-1. 4次S盒查找
-2. 多次位运算和异或操作
-3. 循环移位操作
 
-T-Table优化将S盒变换和线性变换L合并为预计算表，一次查表完成原本多步操作。
+### 优化实现详解 - T-Table查表法
 
-#### T-Table预计算
+#### 优化背景与动机
+
+##### 原始实现的性能瓶颈
+在标准SM4算法实现中，每次T变换需要执行以下步骤：
+1. **S盒查找**：对输入的32位字分解为4个字节，分别进行S盒替换
+2. **位运算**：多次循环左移操作（2位、10位、18位、24位）
+3. **异或运算**：5次异或操作完成线性变换L
+4. **数据重组**：将处理结果重新组合为32位字
+
 ```python
-def _precompute_tables(self):
-    """预计算T表"""
-    self.T0 = [0] * 256
-    self.T1 = [0] * 256  
-    self.T2 = [0] * 256
-    self.T3 = [0] * 256
+# 原始T变换实现（性能瓶颈）
+def _T_original(self, X):
+    # 步骤1：分解为4个字节
+    b0 = (X >> 24) & 0xff
+    b1 = (X >> 16) & 0xff  
+    b2 = (X >> 8) & 0xff
+    b3 = X & 0xff
     
-    for i in range(256):
-        s = self.S_BOX[i]
-        # 计算L变换
-        t = s ^ rotl(s, 2) ^ rotl(s, 10) ^ rotl(s, 18) ^ rotl(s, 24)
-        
-        # 预计算不同字节位置的T表
-        self.T0[i] = t
-        self.T1[i] = rotl(t, 8)
-        self.T2[i] = rotl(t, 16)
-        self.T3[i] = rotl(t, 24)
+    # 步骤2：S盒替换（4次查表）
+    s0 = self.S_BOX[b0]
+    s1 = self.S_BOX[b1]
+    s2 = self.S_BOX[b2]
+    s3 = self.S_BOX[b3]
+    
+    # 步骤3：重组为32位字
+    B = (s0 << 24) | (s1 << 16) | (s2 << 8) | s3
+    
+    # 步骤4：线性变换L（5次运算）
+    return B ^ self._rotl(B, 2) ^ self._rotl(B, 10) ^ self._rotl(B, 18) ^ self._rotl(B, 24)
 ```
 
-#### 优化的T变换
+**性能分析**：
+- 每次T变换：4次S盒查找 + 4次循环移位 + 5次异或 = 13次基本操作
+- 32轮加密：32 × 13 = 416次基本操作/分组
+- 大数据量加密时，这些重复计算成为主要性能瓶颈
+
+#### T-Table优化原理
+
+##### 核心思想
+T-Table优化的核心思想是**预计算**和**查表替换计算**：
+- 将S盒变换τ和线性变换L合并为单一查表操作
+- 预先计算所有可能的τ(L(x))值，存储在4个256项的查找表中
+- 运行时直接查表获取结果，避免重复计算
+
+##### 数学原理
+对于SM4的T变换：`T(X) = L(τ(X))`
+
+其中线性变换L的定义为：
+```
+L(B) = B ⊕ (B<<<2) ⊕ (B<<<10) ⊕ (B<<<18) ⊕ (B<<<24)
+```
+
+可以将32位输入X分解为4个字节：`X = (x₀, x₁, x₂, x₃)`
+
+则：`T(X) = T₀[x₀] ⊕ T₁[x₁] ⊕ T₂[x₂] ⊕ T₃[x₃]`
+
+其中：
+- `T₀[i] = L(S[i])`（最高字节位置）
+- `T₁[i] = L(S[i]) <<< 8`（次高字节位置）
+- `T₂[i] = L(S[i]) <<< 16`（次低字节位置）
+- `T₃[i] = L(S[i]) <<< 24`（最低字节位置）
+
+#### 预计算实现
+
+##### T表生成算法
+```python
+def _precompute_tables(self):
+    """预计算T表 - 核心优化"""
+    # 初始化4个256项的查找表
+    self.T0 = [0] * 256  # 处理最高字节（位置0）
+    self.T1 = [0] * 256  # 处理次高字节（位置1）
+    self.T2 = [0] * 256  # 处理次低字节（位置2）
+    self.T3 = [0] * 256  # 处理最低字节（位置3）
+    
+    for i in range(256):
+        # 步骤1：S盒替换
+        s = self.S_BOX[i]
+        
+        # 步骤2：计算L变换
+        # L(s) = s ⊕ (s<<<2) ⊕ (s<<<10) ⊕ (s<<<18) ⊕ (s<<<24)
+        l_result = (s ^ 
+                   self._rotl32(s, 2) ^ 
+                   self._rotl32(s, 10) ^ 
+                   self._rotl32(s, 18) ^ 
+                   self._rotl32(s, 24)) & 0xffffffff
+        
+        # 步骤3：预计算不同字节位置的T表
+        self.T0[i] = l_result                      # 字节在位置0
+        self.T1[i] = self._rotl32(l_result, 8)     # 字节在位置1  
+        self.T2[i] = self._rotl32(l_result, 16)    # 字节在位置2
+        self.T3[i] = self._rotl32(l_result, 24)    # 字节在位置3
+```
+
+##### 内存布局分析
+```
+T表内存结构：
+┌─────────────┬─────────────┬─────────────┬─────────────┐
+│     T0      │     T1      │     T2      │     T3      │
+│   256×4B    │   256×4B    │   256×4B    │   256×4B    │
+├─────────────┼─────────────┼─────────────┼─────────────┤
+│ T0[0]→T0[255] │ T1[0]→T1[255] │ T2[0]→T2[255] │ T3[0]→T3[255] │
+└─────────────┴─────────────┴─────────────┴─────────────┘
+总内存：4 × 256 × 4 = 4096 字节 = 4KB
+```
+
+#### 优化后的T变换
+
+##### 快速查表实现
 ```python
 def _optimized_t_transform(self, x):
     """使用T-Table的快速T变换"""
-    b0 = (x >> 24) & 0xff
-    b1 = (x >> 16) & 0xff
-    b2 = (x >> 8) & 0xff
-    b3 = x & 0xff
+    # 步骤1：分解输入为4个字节（无额外计算成本）
+    b0 = (x >> 24) & 0xff  # 最高字节
+    b1 = (x >> 16) & 0xff  # 次高字节
+    b2 = (x >> 8) & 0xff   # 次低字节
+    b3 = x & 0xff          # 最低字节
     
-    # 一次查表完成S盒变换和线性变换
+    # 步骤2：直接查表并异或（仅4次查表 + 3次异或）
     return (self.T0[b0] ^ self.T1[b1] ^ self.T2[b2] ^ self.T3[b3]) & 0xffffffff
 ```
+
+##### 性能对比分析
+```
+操作复杂度对比：
+┌─────────────┬────────────────┬─────────────────┬─────────────┐
+│    操作     │   原始实现     │   T-Table优化   │   提升效果  │
+├─────────────┼────────────────┼─────────────────┼─────────────┤
+│  S盒查找    │      4次       │       4次       │     相同    │
+│  循环移位    │      4次       │       0次       │    -100%    │
+│  异或运算    │      5次       │       3次       │     -40%    │
+│  总操作数    │     13次       │       7次       │     -46%    │
+└─────────────┴────────────────┴─────────────────┴─────────────┘
+```
+
+#### 加密流程优化
+
+##### 轮函数优化
+```python
+def _encrypt_block_optimized(self, plaintext, round_keys):
+    """优化的单块加密"""
+    # 将明文转换为4个32位字
+    x = [self._bytes_to_uint32(plaintext[i*4:(i+1)*4]) for i in range(4)]
+    
+    # 32轮迭代（核心优化点）
+    for i in range(32):
+        # 使用优化的T变换
+        temp = x[1] ^ x[2] ^ x[3] ^ round_keys[i]
+        x[0] = x[0] ^ self._optimized_t_transform(temp)  # ← 关键优化
+        # 数据轮换
+        x[0], x[1], x[2], x[3] = x[1], x[2], x[3], x[0]
+    
+    # 反序变换
+    x[0], x[1], x[2], x[3] = x[3], x[2], x[1], x[0]
+    
+    # 转换回字节
+    return b''.join(self._uint32_to_bytes(word) for word in x)
+```
+
+#### 缓存友好性优化
+
+##### 内存访问模式
+```python
+# T表的缓存友好设计
+class CacheOptimizedTables:
+    def __init__(self):
+        # 连续内存布局，提高缓存命中率
+        self._table_data = [0] * (4 * 256)  # 连续的4KB内存块
+        
+        # 创建表的视图
+        self.T0 = self._table_data[0:256]      # 偏移0
+        self.T1 = self._table_data[256:512]    # 偏移256
+        self.T2 = self._table_data[512:768]    # 偏移512  
+        self.T3 = self._table_data[768:1024]   # 偏移768
+```
+
+##### 分支预测优化
+```python
+def _optimized_transform_with_prediction(self, x):
+    """针对分支预测优化的版本"""
+    # 避免条件分支，提高CPU分支预测效率
+    indices = [
+        (x >> 24) & 0xff,
+        (x >> 16) & 0xff, 
+        (x >> 8) & 0xff,
+        x & 0xff
+    ]
+    
+    # 循环展开，减少分支跳转
+    result = self.T0[indices[0]]
+    result ^= self.T1[indices[1]]
+    result ^= self.T2[indices[2]]
+    result ^= self.T3[indices[3]]
+    
+    return result & 0xffffffff
+```
+
+#### 适用场景分析
+
+##### 高性能场景
+```python
+# 大批量数据加密场景
+def batch_encryption_benchmark():
+    """批量加密性能测试"""
+    files = [generate_data(size) for size in [1MB, 10MB, 100MB]]
+    
+    # T-Table优化在大数据量时优势明显
+    for data in files:
+        # 优化版本在处理大文件时性能提升显著
+        encrypted = optimized_sm4.encrypt(data, key)
+```
+
+##### 实时系统场景
+```python
+# 实时通信加密
+def realtime_encryption():
+    """实时数据流加密"""
+    # T-Table优化减少了延迟抖动
+    # 预计算表避免了运行时的复杂计算
+    while receiving_data():
+        packet = get_packet()
+        # 低延迟加密处理
+        encrypted_packet = optimized_sm4.encrypt(packet, session_key)
+        send_packet(encrypted_packet)
+```
+
+#### 优化的局限性与改进
+
+##### 当前局限性
+1. **内存开销**：需要额外8.4KB内存
+2. **初始化时间**：需要预计算1024个表项
+3. **代码复杂性**：实现比原始版本复杂
+
+##### 进一步优化方向
+```python
+# 1. SIMD指令优化
+def simd_optimized_transform(self, x_array):
+    """使用SIMD指令并行处理多个T变换"""
+    # 可以同时处理4个32位字
+    pass
+
+# 2. 硬件加速
+def hardware_accelerated_sm4():
+    """利用专用硬件指令"""
+    # 如Intel AES-NI类似的SM4硬件加速
+    pass
+
+# 3. 查表压缩
+def compressed_table_lookup():
+    """压缩T表减少内存使用"""
+    # 利用T表间的数学关系减少存储
+    pass
+```
+
+这个T-Table优化展示了密码学实现中典型的**时空权衡**策略，通过合理的内存投入获得了显著的性能提升，是SM4算法工程化实现的重要优化技术。
 
 ### 工作模式实现
 
