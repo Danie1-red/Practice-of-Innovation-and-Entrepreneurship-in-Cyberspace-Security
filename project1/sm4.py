@@ -375,28 +375,174 @@ class OptimizedSM4_for_T_Table:
         return self._pkcs7_unpad(result)
 
 
+# 性能对比测试
+def performance_test():
+    """性能测试 - 对比原始版本和T-Table优化版本"""
+    import time
+    
+    # 测试数据
+    key = b'1234567890123456'
+    plaintext = b'Hello, SM4!' * 1000  # 创建较大的测试数据
+    test_rounds = 100
+    
+    print("=== 性能对比测试 ===")
+    print(f"测试数据大小: {len(plaintext)} 字节")
+    print(f"测试轮数: {test_rounds} 次")
+    print("-" * 40)
+    
+    # 测试原始版本
+    print("测试原始SM4算法...")
+    sm4_original = SM4()
+    
+    start_time = time.time()
+    for _ in range(test_rounds):
+        ciphertext_orig = sm4_original.encrypt(plaintext, key)
+        decrypted_orig = sm4_original.decrypt(ciphertext_orig, key)
+    original_time = time.time() - start_time
+    
+    print(f"原始版本 - {test_rounds}次加解密耗时: {original_time:.4f}秒")
+    print(f"原始版本验证结果: {'成功' if decrypted_orig == plaintext else '失败'}")
+    
+    # 测试优化版本
+    print("\n测试T-Table优化SM4算法...")
+    sm4_opt = OptimizedSM4_for_T_Table()
+    
+    start_time = time.time()
+    for _ in range(test_rounds):
+        ciphertext_opt = sm4_opt.encrypt(plaintext, key)
+        decrypted_opt = sm4_opt.decrypt(ciphertext_opt, key)
+    opt_time = time.time() - start_time
+    
+    print(f"优化版本 - {test_rounds}次加解密耗时: {opt_time:.4f}秒")
+    print(f"优化版本验证结果: {'成功' if decrypted_opt == plaintext else '失败'}")
+    
+    # 性能对比分析
+    print("\n" + "=" * 40)
+    print("性能对比分析:")
+    print(f"原始版本耗时: {original_time:.4f}秒")
+    print(f"优化版本耗时: {opt_time:.4f}秒")
+    
+    if opt_time > 0:
+        speedup = original_time / opt_time
+        improvement = ((original_time - opt_time) / original_time) * 100
+        print(f"性能提升倍数: {speedup:.2f}x")
+        print(f"性能提升百分比: {improvement:.1f}%")
+        
+        if speedup > 1:
+            print(f"✓ T-Table优化版本比原始版本快 {speedup:.2f} 倍")
+        else:
+            print(f"✗ T-Table优化版本比原始版本慢 {1/speedup:.2f} 倍")
+    
+    # 验证结果一致性
+    print("\n结果一致性验证:")
+    print(f"两个版本的加密结果是否一致: {'是' if ciphertext_orig == ciphertext_opt else '否'}")
+    print(f"两个版本的解密结果是否一致: {'是' if decrypted_orig == decrypted_opt else '否'}")
 
+def detailed_performance_test():
+    """详细性能测试 - 测试不同数据大小下的性能"""
+    import time
+    
+    key = b'1234567890123456'
+    test_sizes = [100, 1000, 10000, 50000]  # 不同的数据大小
+    test_rounds = 10
+    
+    print("=== 详细性能测试 ===")
+    print(f"测试轮数: {test_rounds} 次")
+    print("-" * 60)
+    print(f"{'数据大小(字节)':<15} {'原始版本(秒)':<15} {'优化版本(秒)':<15} {'性能提升':<10}")
+    print("-" * 60)
+    
+    for size in test_sizes:
+        plaintext = b'A' * size
+        
+        # 测试原始版本
+        sm4_original = SM4()
+        start_time = time.time()
+        for _ in range(test_rounds):
+            ciphertext = sm4_original.encrypt(plaintext, key)
+            sm4_original.decrypt(ciphertext, key)
+        original_time = time.time() - start_time
+        
+        # 测试优化版本
+        sm4_opt = OptimizedSM4_for_T_Table()
+        start_time = time.time()
+        for _ in range(test_rounds):
+            ciphertext = sm4_opt.encrypt(plaintext, key)
+            sm4_opt.decrypt(ciphertext, key)
+        opt_time = time.time() - start_time
+        
+        # 计算性能提升
+        speedup = original_time / opt_time if opt_time > 0 else 0
+        
+        print(f"{size:<15} {original_time:<15.4f} {opt_time:<15.4f} {speedup:<10.2f}x")
 
-# 使用示例
-if __name__ == "__main__":
-    # 创建SM4实例
-    #sm4 = SM4()
+def memory_usage_comparison():
+    """内存使用对比"""
+    import sys
+    
+    print("=== 内存使用对比 ===")
+    
+    # 原始版本内存使用
+    sm4_original = SM4()
+    original_size = sys.getsizeof(sm4_original)
+    original_size += sys.getsizeof(sm4_original.S_BOX)
+    original_size += sys.getsizeof(sm4_original.FK)
+    original_size += sys.getsizeof(sm4_original.CK)
+    
+    # 优化版本内存使用
+    sm4_opt = OptimizedSM4_for_T_Table()
+    opt_size = sys.getsizeof(sm4_opt)
+    opt_size += sys.getsizeof(sm4_opt.S_BOX)
+    opt_size += sys.getsizeof(sm4_opt.T0) + sys.getsizeof(sm4_opt.T1)
+    opt_size += sys.getsizeof(sm4_opt.T2) + sys.getsizeof(sm4_opt.T3)
+    opt_size += sys.getsizeof(sm4_opt.FK)
+    opt_size += sys.getsizeof(sm4_opt.CK)
+    
+    print(f"原始版本内存使用: {original_size} 字节")
+    print(f"优化版本内存使用: {opt_size} 字节")
+    print(f"额外内存开销: {opt_size - original_size} 字节")
+    print(f"T表大小: {4 * 256 * 4} 字节 (4个256项的32位整数表)")
+
+# 功能测试
+def functional_test():
+    """功能测试"""
     sm4 = OptimizedSM4_for_T_Table()
     
-    # 测试密钥和明文
-    key = b'1234567890abcdef'  # 16字节密钥
-    plaintext = b'Hello, SM4 Algorithm!'
+    # 测试用例1：标准测试
+    key = b'1234567890123456'
+    plaintext = b'Hello, World!'
     
-    print(f"原文: {plaintext}")
-    print(f"密钥: {key}")
+    print("=== SM4算法功能测试 ===")
+    print(f"密钥: {key.hex()}")
+    print(f"明文: {plaintext}")
+    print(f"明文(hex): {plaintext.hex()}")
     
     # 加密
     ciphertext = sm4.encrypt(plaintext, key)
-    print(f"密文: {ciphertext.hex()}")
+    print(f"密文(hex): {ciphertext.hex()}")
     
     # 解密
     decrypted = sm4.decrypt(ciphertext, key)
-    print(f"解密: {decrypted}")
+    print(f"解密结果: {decrypted}")
+    print(f"解密结果(hex): {decrypted.hex()}")
+    print(f"验证: {'成功' if decrypted == plaintext else '失败'}")
+
+
+if __name__ == "__main__":
+    print("SM4算法 - 原始版本与T-Table优化版本对比")
+    print("=" * 60)
     
-    # 验证
-    print(f"验证成功: {plaintext == decrypted}")
+    # 基本功能测试
+    functional_test()
+    print("\n" + "=" * 60)
+    
+    # 基础性能对比
+    performance_test()
+    print("\n" + "=" * 60)
+    
+    # 详细性能测试
+    detailed_performance_test()
+    print("\n" + "=" * 60)
+    
+    # 内存使用对比
+    memory_usage_comparison()
