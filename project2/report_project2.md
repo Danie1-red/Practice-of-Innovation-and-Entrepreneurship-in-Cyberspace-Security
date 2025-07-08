@@ -361,7 +361,6 @@ def run_single_test(self, test_name, output_path):
 **项目信息**
 - **完成时间**：2025年7月
 - **实验环境**：Python 3.x + OpenCV + PIL + NumPy
-- **代码仓库**：[GitHub Repository](https://github.com/your-repo/watermark-comparison)
 - **测试数据**：54项鲁棒性测试，包含几何变换、图像处理、噪声攻击等多个类别
 
 **核心发现**：DCT频域水印在保持良好视觉质量的同时，鲁棒性相比LSB水印提升了5倍以上，证明了频域技术在数字水印领域的实用价值。
