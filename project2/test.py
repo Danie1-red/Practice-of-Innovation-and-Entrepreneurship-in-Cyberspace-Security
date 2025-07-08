@@ -1,111 +1,50 @@
-import cv2
-import numpy as np
-from PIL import Image
+from watermark import ImageWatermark
 import os
-from test import ImageWatermark
+from PIL import Image
 
-def create_test_images():
-    """创建测试用的图像"""
-    # 创建载体图像 (蓝色背景)
-    cover = np.zeros((400, 600, 3), dtype=np.uint8)
-    cover[:] = (255, 100, 100)  # BGR格式，蓝色背景
-    cv2.imwrite('test_images/cover.jpg', cover)
-    
-    # 创建水印图像 (红色方块)
-    watermark = np.zeros((100, 100, 3), dtype=np.uint8)
-    watermark[:] = (0, 0, 255)  # 红色
-    cv2.rectangle(watermark, (10, 10), (90, 90), (255, 255, 255), 2)
-    cv2.imwrite('test_images/watermark.jpg', watermark)
-    
-    print("测试图像已创建在 test_images/ 目录下")
+def analyze_image_properties():
+    """分析原始图像的属性"""
+    if os.path.exists('test.png'):
+        img = Image.open('test.png')
+        print(f"原始图像信息:")
+        print(f"  - 模式: {img.mode}")
+        print(f"  - 尺寸: {img.size}")
+        print(f"  - 格式: {img.format}")
+        print(f"  - 文件大小: {os.path.getsize('test.png')} bytes")
 
-def test_visible_watermark():
-    """测试可见水印功能"""
-    print("\n=== 测试可见水印 ===")
+def test_improved_watermark():
+    """测试改进的水印功能"""
+    print("=== 改进的LSB水印测试 ===")
+    
+    analyze_image_properties()
+    
     watermark_tool = ImageWatermark()
+    test_text = "Hello World 测试水印"
     
-    try:
-        watermark_tool.embed_watermark(
-            'test_images/cover.jpg',
-            'test_images/watermark.jpg', 
-            'test_images/visible_watermarked.jpg',
-            alpha=0.3
-        )
-        print("✓ 可见水印嵌入成功")
-    except Exception as e:
-        print(f"✗ 可见水印嵌入失败: {e}")
-
-def test_lsb_watermark():
-    """测试LSB隐形水印功能"""
-    print("\n=== 测试LSB隐形水印 ===")
-    watermark_tool = ImageWatermark()
+    # 嵌入水印
+    watermark_tool.embed_lsb_watermark(
+        'test.png',
+        test_text,
+        'improved_watermarked.png'
+    )
     
-    test_text = "Hello World 你好世界"
+    # 分析结果图像
+    if os.path.exists('improved_watermarked.png'):
+        img = Image.open('improved_watermarked.png')
+        print(f"\n水印图像信息:")
+        print(f"  - 模式: {img.mode}")
+        print(f"  - 尺寸: {img.size}")
+        print(f"  - 文件大小: {os.path.getsize('improved_watermarked.png')} bytes")
     
-    try:
-        # 嵌入LSB水印
-        watermark_tool.embed_lsb_watermark(
-            'test_images/cover.jpg',
-            test_text,
-            'test_images/lsb_watermarked.jpg'
-        )
-        print("✓ LSB水印嵌入成功")
-        
-        # 提取LSB水印
-        extracted_text = watermark_tool.extract_lsb_watermark('test_images/lsb_watermarked.jpg')
-        
-        if extracted_text.strip() == test_text:
-            print("✓ LSB水印提取成功，文本完全匹配")
-        else:
-            print(f"✗ LSB水印提取结果不匹配")
-            print(f"原文本: '{test_text}'")
-            print(f"提取文本: '{extracted_text.strip()}'")
-            
-    except Exception as e:
-        print(f"✗ LSB水印测试失败: {e}")
-
-def test_watermark_detection():
-    """测试水印检测功能"""
-    print("\n=== 测试水印检测 ===")
-    watermark_tool = ImageWatermark()
+    # 提取水印
+    extracted = watermark_tool.extract_lsb_watermark('improved_watermarked.png')
     
-    try:
-        # 检测可见水印
-        similarity = watermark_tool.detect_watermark(
-            'test_images/cover.jpg',
-            'test_images/visible_watermarked.jpg'
-        )
-        print(f"✓ 可见水印检测完成，相似度: {similarity:.4f}")
-        
-        # 检测LSB水印
-        similarity_lsb = watermark_tool.detect_watermark(
-            'test_images/cover.jpg', 
-            'test_images/lsb_watermarked.jpg'
-        )
-        print(f"✓ LSB水印检测完成，相似度: {similarity_lsb:.4f}")
-        
-    except Exception as e:
-        print(f"✗ 水印检测失败: {e}")
-
-def run_all_tests():
-    """运行所有测试"""
-    print("开始运行水印工具测试...")
+    # 检测水印
+    similarity = watermark_tool.detect_watermark('test.png', 'improved_watermarked.png')
     
-    # 创建测试目录
-    os.makedirs('test_images', exist_ok=True)
-    
-    # 创建测试图像
-    create_test_images()
-    
-    # 运行各项测试
-    test_visible_watermark()
-    test_lsb_watermark() 
-    test_watermark_detection()
-    
-    print("\n=== 测试完成 ===")
-    print("生成的文件:")
-    for file in os.listdir('test_images'):
-        print(f"  - test_images/{file}")
+    print(f"\n测试结果:")
+    print(f"  - 文本匹配: {'✓' if extracted == test_text else '✗'}")
+    print(f"  - 图像相似度: {similarity:.6f}")
 
 if __name__ == "__main__":
-    run_all_tests()
+    test_improved_watermark()
