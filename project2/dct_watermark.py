@@ -5,12 +5,11 @@ import os
 
 class DCTWatermark:
     def __init__(self):
-        self.alpha = 15.0  # 水印强度系数
+        self.alpha = 20.0  # 水印强度系数
         self.block_size = 8  # DCT块大小
         
     def text_to_binary(self, text):
         """将文本转换为二进制"""
-        # 修复：直接使用字节值，不需要ord()
         text_bytes = text.encode('utf-8')
         binary = ''.join(format(byte, '08b') for byte in text_bytes)
         return binary + '1111111111111110'  # 添加结束标记
@@ -46,10 +45,8 @@ class DCTWatermark:
     
     def get_mid_freq_positions(self):
         """获取中频系数位置（用于嵌入水印）"""
-        # 选择8x8块中的中频位置，避免DC分量和高频噪声
-        positions = [
-            (2, 1), (1, 2), (3, 1), (2, 2), (1, 3), (4, 1), (3, 2), (2, 3)
-        ]
+        # 只选择一个稳定的中频位置
+        positions = [(2, 1)]  # 减少到1个位置，提高稳定性
         return positions
     
     def embed_dct_watermark(self, cover_image_path, watermark_text, output_path):
@@ -102,6 +99,9 @@ class DCTWatermark:
         bit_index = 0
         embedded_blocks = 0
         
+        # 存储嵌入信息用于调试
+        embed_info = []
+        
         for i in range(0, blocks_h * self.block_size, self.block_size):
             for j in range(0, blocks_w * self.block_size, self.block_size):
                 if bit_index >= len(binary_watermark):
@@ -121,18 +121,28 @@ class DCTWatermark:
                     # 获取当前位的水印值
                     watermark_bit = int(binary_watermark[bit_index])
                     
-                    # 改进的DCT系数修改方法
+                    # 记录原始系数
                     original_coeff = dct_block[u, v]
                     
+                    # 改进的量化嵌入方法
                     if watermark_bit == 1:
-                        # 嵌入1：增加系数幅值
-                        dct_block[u, v] = original_coeff + self.alpha if original_coeff >= 0 else original_coeff - self.alpha
+                        # 嵌入1：使系数为正且足够大
+                        dct_block[u, v] = abs(original_coeff) + self.alpha
                     else:
-                        # 嵌入0：减少系数幅值
+                        # 嵌入0：使系数为负或很小
                         if abs(original_coeff) > self.alpha:
-                            dct_block[u, v] = original_coeff - self.alpha if original_coeff >= 0 else original_coeff + self.alpha
+                            dct_block[u, v] = -(abs(original_coeff) - self.alpha/2)
                         else:
-                            dct_block[u, v] = 0
+                            dct_block[u, v] = -self.alpha/2
+                    
+                    # 记录嵌入信息
+                    embed_info.append({
+                        'block': (i//8, j//8),
+                        'pos': (u, v),
+                        'bit': watermark_bit,
+                        'original': original_coeff,
+                        'modified': dct_block[u, v]
+                    })
                     
                     bit_index += 1
                 
@@ -146,6 +156,11 @@ class DCTWatermark:
         
         print(f"已处理块数: {embedded_blocks}")
         print(f"已嵌入位数: {bit_index}")
+        
+        # 显示前几个嵌入的信息
+        print("\n前5个嵌入的DCT系数:")
+        for i, info in enumerate(embed_info[:5]):
+            print(f"块{info['block']}, 位置{info['pos']}: {info['bit']} -> {info['original']:.2f} -> {info['modified']:.2f}")
         
         # 重构图像
         watermarked_yuv = yuv.copy()
@@ -191,6 +206,9 @@ class DCTWatermark:
         extracted_bits = ""
         processed_blocks = 0
         
+        # 存储提取信息用于调试
+        extract_info = []
+        
         for i in range(0, blocks_h * self.block_size, self.block_size):
             for j in range(0, blocks_w * self.block_size, self.block_size):
                 # 提取8x8块
@@ -201,18 +219,34 @@ class DCTWatermark:
                 
                 # 从中频位置提取水印
                 for u, v in mid_freq_pos:
-                    # 改进的提取方法：根据系数符号和幅值判断
+                    # 改进的提取方法：根据系数符号判断
                     coeff = dct_block[u, v]
                     
-                    if abs(coeff) >= self.alpha / 2:
-                        extracted_bits += "1"
+                    if coeff > 0:
+                        bit = "1"
                     else:
-                        extracted_bits += "0"
+                        bit = "0"
+                    
+                    extracted_bits += bit
+                    
+                    # 记录提取信息
+                    if len(extract_info) < 5:  # 只记录前5个
+                        extract_info.append({
+                            'block': (i//8, j//8),
+                            'pos': (u, v),
+                            'coeff': coeff,
+                            'bit': bit
+                        })
                 
                 processed_blocks += 1
         
         print(f"处理块数: {processed_blocks}")
         print(f"提取位数: {len(extracted_bits)}")
+        
+        # 显示前几个提取的信息
+        print("\n前5个提取的DCT系数:")
+        for info in extract_info:
+            print(f"块{info['block']}, 位置{info['pos']}: {info['coeff']:.2f} -> {info['bit']}")
         
         # 转换为文本
         extracted_text = self.binary_to_text(extracted_bits)
