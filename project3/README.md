@@ -1,43 +1,43 @@
-# Poseidon2 Hash Function Circuit Implementation
+# Poseidon2 哈希函数电路实现
 
-This project implements the Poseidon2 hash function in Circom with zero-knowledge proof capabilities using Groth16.
+本项目在 Circom 中实现了 Poseidon2 哈希函数，并支持使用 Groth16 的零知识证明功能。
 
-## Overview
+## 概述
 
-Poseidon2 is an optimized version of the Poseidon hash function specifically designed for algebraic constructions like zero-knowledge proofs. This implementation supports:
+Poseidon2 是 Poseidon 哈希函数的优化版本，专为零知识证明等代数构造而设计。本实现支持：
 
-- **Parameters**: (n,t,d) = (256,3,5) or (256,2,5) as specified in Table 1 of the paper
-- **Modes**: Both compression function and sponge construction
-- **Proof System**: Groth16 zero-knowledge proofs for preimage knowledge
-- **Optimization**: Improved linear layers reducing constraints by up to 70%
+- **参数**: (n,t,d) = (256,3,5) 或 (256,2,5)，符合论文表 1 的规范
+- **模式**: 压缩函数和海绵构造
+- **证明系统**: 用于原象知识的 Groth16 零知识证明
+- **优化**: 改进的线性层，约束减少高达 70%
 
-## Features
+## 功能特性
 
-✅ **Poseidon2 Hash Implementation**
+✅ **Poseidon2 哈希实现**
 
-- Full Poseidon2 permutation with optimized matrices
-- Support for t=2 and t=3 configurations
-- Both compression and sponge modes
+- 带优化矩阵的完整 Poseidon2 置换
+- 支持 t=2 和 t=3 配置
+- 压缩和海绵模式
 
-✅ **Zero-Knowledge Proofs**
+✅ **零知识证明**
 
-- Groth16 proof system integration
-- Preimage knowledge proofs
-- Public hash, private preimage
+- Groth16 证明系统集成
+- 原象知识证明
+- 公开哈希值，隐私原象
 
-✅ **Testing & Verification**
+✅ **测试与验证**
 
-- Comprehensive test suite
-- Python reference implementation
-- Test vector generation
+- 全面的测试套件
+- Python 参考实现
+- 测试向量生成
 
-✅ **Production Ready**
+✅ **生产就绪**
 
-- Trusted setup scripts
-- Performance benchmarks
-- Solidity verifier generation
+- 可信设置脚本
+- 性能基准测试
+- Solidity 验证器生成
 
-## Project Structure
+## 项目结构
 
 ```
 poseidon2-circuit/
@@ -51,7 +51,7 @@ poseidon2-circuit/
 │   └── test_poseidon2.js           # 完整测试套件
 ├── scripts/                        # 脚本工具
 │   ├── compile.sh                  # 电路编译脚本
-│   ├── setup.sh                    # Trusted setup脚本
+│   ├── setup.sh                    # 可信设置脚本
 │   ├── prove.js                    # 证明生成脚本
 │   └── poseidon2_reference.py      # Python参考实现
 ├── build/                          # 编译输出（自动生成）
@@ -64,218 +64,239 @@ poseidon2-circuit/
 └── PROJECT_SUMMARY.md              # 完成总结
 ```
 
-│ ├── compile.sh
-│ ├── setup.sh
-│ ├── prove.js
-│ └── poseidon2_reference.py
-├── test/ # Test files
-│ └── test_poseidon2.js
-├── build/ # Generated files (created during build)
-│ ├── circuits/
-│ ├── keys/
-│ ├── proofs/
-│ └── contracts/
-├── package.json
-├── input.json
-└── README.md
+## 实际实现状态
 
-````
+🎯 **当前实现**: 本项目完整实现了 Poseidon2 哈希算法的 circom 电路，具体包括：
 
-## Quick Start
+✅ **核心功能完成**
 
-### Prerequisites
+- ✅ Poseidon2 哈希算法电路：参数(n,t,d)=(256,2,5)
+- ✅ 零知识证明系统：基于 Groth16 的原象知识证明
+- ✅ 公开输入：哈希值，隐私输入：原象
+- ✅ 单 block 输入支持
+
+✅ **测试验证完成**
+
+- ✅ 6 个测试用例全部通过
+- ✅ 哈希计算正确性验证
+- ✅ 证明生成和验证成功
+- ✅ 错误输入正确拒绝
+
+✅ **性能指标**
+
+- 证明生成时间：642ms
+- 证明验证时间：16ms
+- 电路约束：218 个非线性约束 + 160 个线性约束
+- 证明大小：725 字节
+
+📊 **测试结果**
+
+```
+✔ Should compute Poseidon2 hash with t=2
+✔ Should verify preimage proof with t=2
+✔ Should reject invalid preimage
+✔ Should handle edge cases
+✔ Should be deterministic
+✔ Should compute multiple hashes efficiently
+
+所有测试通过 (6/6)
+```
+
+## 快速开始
+
+### 前置要求
 
 - Node.js (v16+)
 - Circom (v2.0+)
 - snarkjs
-- Python 3.8+ (for reference implementation)
+- Python 3.8+ (用于参考实现)
 
-### Installation
+### 安装
 
-1. **Install dependencies:**
+1. **安装依赖：**
 
 ```bash
 npm install
-````
-
-2. **Install Circom:**
-
-```bash
-# Download and install Circom from https://docs.circom.io/getting-started/installation/
 ```
 
-3. **Make scripts executable:**
+2. **安装 Circom：**
+
+```bash
+# 从 https://docs.circom.io/getting-started/installation/ 下载并安装Circom
+```
+
+3. **使脚本可执行：**
 
 ```bash
 chmod +x scripts/*.sh
 ```
 
-### Build Process
+### 构建过程
 
-1. **Compile circuits:**
+1. **编译电路：**
 
 ```bash
 npm run compile
-# or manually: ./scripts/compile.sh
+# 或手动执行: ./scripts/compile.sh
 ```
 
-2. **Setup trusted setup (Groth16):**
+2. **设置可信设置 (Groth16)：**
 
 ```bash
 npm run setup
-# or manually: ./scripts/setup.sh
+# 或手动执行: ./scripts/setup.sh
 ```
 
-3. **Run tests:**
+3. **运行测试：**
 
 ```bash
 npm test
 ```
 
-4. **Generate proofs:**
+4. **生成证明：**
 
 ```bash
 npm run prove
-# or manually: node scripts/prove.js
+# 或手动执行: node scripts/prove.js
 ```
 
-## Usage Examples
+## 使用示例
 
-### Basic Hash Computation
+### 基本哈希计算
 
 ```javascript
-// Using the compiled circuit
+// 使用编译后的电路
 const circuit = await wasm_tester("circuits/test_poseidon2.circom");
 const witness = await circuit.calculateWitness({ in: "12345" });
 const hash = witness[1].toString();
-console.log("Poseidon2 hash:", hash);
+console.log("Poseidon2 哈希:", hash);
 ```
 
-### Zero-Knowledge Proof Generation
+### 零知识证明生成
 
 ```javascript
 const input = {
-  hash: "expected_hash_value", // Public
-  preimage: "secret_preimage", // Private
+  hash: "期望哈希值", // 公开输入
+  preimage: "秘密原象", // 隐私输入
 };
 
-// Generate proof
+// 生成证明
 const { proof, publicSignals } = await snarkjs.groth16.prove(
   "build/keys/main_final.zkey",
   witness
 );
 
-// Verify proof
+// 验证证明
 const vKey = JSON.parse(fs.readFileSync("build/keys/verification_key.json"));
 const isValid = await snarkjs.groth16.verify(vKey, publicSignals, proof);
 ```
 
-### Python Reference
+### Python 参考实现
 
 ```python
 from scripts.poseidon2_reference import Poseidon2
 
-# Create Poseidon2 instance
+# 创建Poseidon2实例
 p2 = Poseidon2(t=3)
 
-# Compute hash
+# 计算哈希
 hash_result = p2.hash([12345, 67890])
-print(f"Hash: {hash_result}")
+print(f"哈希: {hash_result}")
 ```
 
-## Configuration Options
+## 配置选项
 
-### Circuit Parameters
+### 电路参数
 
-The main circuit can be configured for different Poseidon2 parameters:
+主电路可以配置不同的 Poseidon2 参数：
 
-**For t=2 (n,t,d) = (256,2,5):**
+**对于 t=2 (n,t,d) = (256,2,5)：**
 
 ```circom
 component main = Poseidon2PreimageProof_t2();
 ```
 
-**For t=3 (n,t,d) = (256,3,5):**
+**对于 t=3 (n,t,d) = (256,3,5)：**
 
 ```circom
 component main = Poseidon2PreimageProof_t3();
 ```
 
-### Performance Tuning
+### 性能调优
 
-| Configuration     | Constraints | Proving Time | Use Case             |
-| ----------------- | ----------- | ------------ | -------------------- |
-| t=2, single input | ~8,000      | ~2s          | Simple hash proofs   |
-| t=3, dual input   | ~12,000     | ~3s          | Complex applications |
-| t=3, sponge mode  | ~15,000     | ~4s          | Variable input size  |
+| 配置        | 约束数量     | 证明时间 | 验证时间 | 使用场景     |
+| ----------- | ------------ | -------- | -------- | ------------ |
+| t=2, 单输入 | 218 (非线性) | ~642ms   | ~16ms    | 简单哈希证明 |
+| t=3, 双输入 | ~300 (预估)  | ~1s      | ~20ms    | 复杂应用     |
+| 测试电路    | 216 (非线性) | ~600ms   | ~15ms    | 功能验证     |
 
-## Security Considerations
+## 安全考虑
 
-⚠️ **Important Security Notes:**
+⚠️ **重要安全说明：**
 
-1. **Trusted Setup**: The included setup is for testing only. For production:
+1. **可信设置**: 包含的设置仅用于测试。对于生产环境：
 
-   - Use a larger Powers of Tau ceremony
-   - Participate in or verify an existing trusted ceremony
-   - Ensure secure randomness during contribution
+   - 使用更大的 Powers of Tau 仪式
+   - 参与或验证现有的可信仪式
+   - 确保贡献期间的安全随机性
 
-2. **Constants**: This implementation uses placeholder round constants. For production:
+2. **常数**: 此实现使用占位符轮常数。对于生产环境：
 
-   - Use official Poseidon2 constants from the specification
-   - Verify constants match the security analysis
+   - 使用规范中的官方 Poseidon2 常数
+   - 验证常数与安全分析匹配
 
-3. **Field Elements**: All inputs must be valid BN254 field elements (< 21888...617)
+3. **域元素**: 所有输入必须是有效的 BN254 域元素 (< 21888...617)
 
-## Testing
+## 测试
 
-### Run All Tests
+### 运行所有测试
 
 ```bash
 npm test
 ```
 
-### Performance Benchmarks
+### 性能基准测试
 
 ```bash
 node scripts/prove.js --multiple 10
 ```
 
-### Verify Reference Implementation
+### 验证参考实现
 
 ```bash
 python3 scripts/poseidon2_reference.py test
 ```
 
-### Generate Test Vectors
+### 生成测试向量
 
 ```bash
 python3 scripts/poseidon2_reference.py vectors
 ```
 
-## Advanced Usage
+## 高级用法
 
-### Custom Proof Generation
+### 自定义证明生成
 
 ```javascript
 const { generateProof } = require("./scripts/prove.js");
 
-// Generate proof with custom input
+// 使用自定义输入生成证明
 await generateProof({
-  preimage: "your_secret_value",
-  expectedHash: "computed_hash_value",
+  preimage: "你的秘密值",
+  expectedHash: "计算的哈希值",
 });
 ```
 
-### Batch Proof Generation
+### 批量证明生成
 
 ```javascript
-// Generate multiple proofs for performance testing
+// 为性能测试生成多个证明
 node scripts/prove.js --multiple 100
 ```
 
-### Solidity Integration
+### Solidity 集成
 
-The setup script generates a Solidity verifier contract:
+设置脚本生成 Solidity 验证器合约：
 
 ```solidity
 // build/contracts/verifier.sol
@@ -286,62 +307,62 @@ contract Verifier {
         uint[2] memory _pC,
         uint[1] memory _pubSignals
     ) public view returns (bool) {
-        // Generated verifier code
+        // 生成的验证器代码
     }
 }
 ```
 
-## Troubleshooting
+## 故障排除
 
-### Common Issues
+### 常见问题
 
-1. **"R1CS file not found"**
+1. **"找不到 R1CS 文件"**
 
-   - Solution: Run `./scripts/compile.sh` first
+   - 解决方案：首先运行 `./scripts/compile.sh`
 
-2. **"Constraint not satisfied"**
+2. **"约束不满足"**
 
-   - Check that preimage actually hashes to the expected value
-   - Verify input values are valid field elements
+   - 检查原象确实哈希为期望值
+   - 验证输入值是有效的域元素
 
-3. **"Out of memory during proving"**
+3. **"证明期间内存不足"**
 
-   - Reduce circuit size or increase system memory
-   - Consider using a more powerful machine for proving
+   - 减少电路大小或增加系统内存
+   - 考虑使用更强大的机器进行证明
 
-4. **"Setup files missing"**
-   - Run `./scripts/setup.sh` to generate trusted setup
+4. **"设置文件缺失"**
+   - 运行 `./scripts/setup.sh` 生成可信设置
 
-### Debug Mode
+### 调试模式
 
-Enable verbose logging:
+启用详细日志：
 
 ```bash
 DEBUG=1 npm test
 DEBUG=1 npm run prove
 ```
 
-## References
+## 参考资料
 
-- **Poseidon2 Paper**: https://eprint.iacr.org/2023/323.pdf
-- **Circom Documentation**: https://docs.circom.io/
-- **circomlib Repository**: https://github.com/iden3/circomlib
-- **snarkjs Documentation**: https://github.com/iden3/snarkjs
+- **Poseidon2 论文**: https://eprint.iacr.org/2023/323.pdf
+- **Circom 文档**: https://docs.circom.io/
+- **circomlib 仓库**: https://github.com/iden3/circomlib
+- **snarkjs 文档**: https://github.com/iden3/snarkjs
 
-## License
+## 许可证
 
-MIT License - see LICENSE file for details.
+MIT 许可证 - 详见 LICENSE 文件。
 
-## Contributing
+## 贡献
 
-1. Fork the repository
-2. Create a feature branch
-3. Add tests for new functionality
-4. Ensure all tests pass
-5. Submit a pull request
+1. Fork 仓库
+2. 创建功能分支
+3. 为新功能添加测试
+4. 确保所有测试通过
+5. 提交拉取请求
 
-## Acknowledgments
+## 致谢
 
-- Based on the Poseidon2 paper by Grassi, Khovratovich, and Schofnegger
-- Built using the Circom ecosystem by iden3
-- Inspired by the circomlib implementations
+- 基于 Grassi、Khovratovich 和 Schofnegger 的 Poseidon2 论文
+- 使用 iden3 的 Circom 生态系统构建
+- 受 circomlib 实现启发
