@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Build outputs
+build/
+*.r1cs
+*.wasm
+*.wtns
+*.zkey
+*.ptau
+
+# Temporary files
+temp_*
+debug_*
+*.tmp
+
+# IDE and OS
+.vscode/
+.DS_Store
+*.log
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Circom compilation artifacts
+*.dat
+*.cpp
+main.cpp
+calcwit.*
+circom.hpp
+fr.*
+Makefile

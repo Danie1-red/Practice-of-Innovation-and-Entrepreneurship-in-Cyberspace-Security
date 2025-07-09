@@ -1,0 +1,31 @@
+{
+  "name": "poseidon2-circuit",
+  "version": "1.0.0",
+  "description": "Poseidon2 hash function implementation in circom",
+  "main": "index.js",
+  "scripts": {
+    "compile": "./scripts/compile.sh",
+    "setup": "./scripts/setup.sh",
+    "test": "npx mocha test/*.js",
+    "prove": "node scripts/prove.js"
+  },
+  "dependencies": {
+    "circomlib": "^2.0.5",
+    "snarkjs": "^0.7.4",
+    "ffjavascript": "^0.3.0"
+  },
+  "devDependencies": {
+    "circom_tester": "^0.0.24",
+    "mocha": "^10.7.3",
+    "chai": "^4.5.0"
+  },
+  "keywords": [
+    "circom",
+    "poseidon2",
+    "zero-knowledge",
+    "hash-function",
+    "groth16"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}
