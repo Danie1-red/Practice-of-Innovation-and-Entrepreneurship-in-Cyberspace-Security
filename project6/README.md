@@ -1,32 +1,20 @@
 # DDH-based PI-Sum Protocol Implementation
 
-基于论文 "On Deploying Secure Computing: Private Intersection-Sum-with-Cardinality" Sectio## 运行示例
-
-````bash
-# 运行安全版本协议（推荐）
-python secure_pi_sum_protocol.py
-
-# 运行简化版协议
-python simple_pi_sum_protocol.py
-
-# 运行完整测试套件
-python test_pi_sum_protocol.py
-```实现。
+基于论文 "On Deploying Secure Computing: Private Intersection-Sum-with-Cardinality" Section 3.1 的协议实现。
 
 ## 项目结构
 
-````
+```
 
 project6/
-├── README.md # 项目说明文档
-├── ddh_pi_sum_protocol.py # 椭圆曲线版本（有实现问题）
-├── simple_pi_sum_protocol.py # 简化版协议实现（便于理解）
-├── secure_pi_sum_protocol.py # 完整安全版本（推荐）
-├── test_pi_sum_protocol.py # 协议测试套件
-├── 协议原理.md # 协议原理详细解析
-└── 论文总结.md # 论文核心内容总结
-
-````
+├── README.md                    # 项目说明文档
+├── ddh_pi_sum_protocol.py      # 椭圆曲线版本（有实现问题）
+├── simple_pi_sum_protocol.py   # 简化版协议实现（便于理解）
+├── secure_pi_sum_protocol.py   # 完整安全版本（推荐）
+├── test_pi_sum_protocol.py     # 协议测试套件
+├── 协议原理.md                 # 协议原理详细解析
+└── 论文总结.md                 # 论文核心内容总结
+```
 
 ## 协议概述
 
@@ -124,28 +112,36 @@ P₂ 计算并发送：
 ## 实现说明
 
 ### secure_pi_sum_protocol.py（推荐）
+
 完整且安全的协议实现，包含：
-- 基于1024位安全素数的DDH群
-- 完整的Paillier同态加密实现
+
+- 基于 1024 位安全素数的 DDH 群
+- 完整的 Paillier 同态加密实现
 - 严格遵循论文协议流程
-- Miller-Rabin素性测试
+- Miller-Rabin 素性测试
 - 工业级安全参数
 
 ### simple_pi_sum_protocol.py
+
 简化版实现，特点：
+
 - 使用整数模运算代替椭圆曲线
 - 简化的"同态"加密（仅演示流程）
 - 保留协议核心逻辑
 - 便于理解协议原理
 
 ### ddh_pi_sum_protocol.py
+
 椭圆曲线版本实现（存在技术问题）：
-- 尝试使用椭圆曲线实现DDH群
-- 有cryptography库兼容性问题
+
+- 尝试使用椭圆曲线实现 DDH 群
+- 有 cryptography 库兼容性问题
 - 仅供学习参考
 
 ### test_pi_sum_protocol.py
+
 全面的测试套件，覆盖：
+
 - 空交集、完全交集、部分交集场景
 - 大规模数据处理能力
 - 边界条件和特殊值处理
@@ -154,12 +150,15 @@ P₂ 计算并发送：
 ## 运行示例
 
 ```bash
-# 运行完整版协议
-python ddh_pi_sum_protocol.py
+# 运行安全版本协议（推荐）
+python secure_pi_sum_protocol.py
 
 # 运行简化版协议
 python simple_pi_sum_protocol.py
-````
+
+# 运行完整测试套件
+python test_pi_sum_protocol.py
+```
 
 ## 依赖库
 
