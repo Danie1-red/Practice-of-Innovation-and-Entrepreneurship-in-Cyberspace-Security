@@ -11,9 +11,7 @@ project6/
 ├── ddh_pi_sum_protocol.py      # 椭圆曲线版本（有实现问题）
 ├── simple_pi_sum_protocol.py   # 简化版协议实现（便于理解）
 ├── secure_pi_sum_protocol.py   # 完整安全版本（推荐）
-├── test_pi_sum_protocol.py     # 协议测试套件
-├── 协议原理.md                 # 协议原理详细解析
-└── 论文总结.md                 # 论文核心内容总结
+└── test_pi_sum_protocol.py     # 协议测试套件
 ```
 
 ## 协议概述
