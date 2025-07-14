@@ -1,0 +1,13 @@
+# Google Password Checkup Demo - Requirements
+# 基于 DDH-based PI-Sum 协议的密码安全检查演示项目
+
+# 核心依赖（必需）
+cryptography>=3.4.8      # 密码学库，用于 Paillier 加密和哈希函数
+
+# 可选依赖（用于扩展功能）
+# flask>=2.0.0           # 如需网页版演示可取消注释
+# matplotlib>=3.5.0      # 如需性能图表可取消注释
+
+# 可选的高级依赖
+# gmpy2>=2.1.0          # 高性能大整数运算 (可选，提升性能)
+# pycryptodome>=3.15.0  # 额外的密码学算法支持
