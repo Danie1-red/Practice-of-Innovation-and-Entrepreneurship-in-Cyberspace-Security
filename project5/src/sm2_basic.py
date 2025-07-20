@@ -198,6 +198,10 @@ class SM2Curve:
             k >>= 1
         
         return result
+    
+    def multiply(self, k: int, P: Point) -> Point:
+        """别名方法，调用point_multiply"""
+        return self.point_multiply(k, P)
 
 
 class SM2:
@@ -261,6 +265,34 @@ class SM2:
             
             if s != 0:
                 return r, s
+    
+    def sign_with_k(self, message: str, private_key: int, k: int) -> Tuple[int, int]:
+        """使用指定的k值进行签名（仅用于测试）"""
+        if isinstance(message, str):
+            message = message.encode('utf-8')
+        
+        # 计算公钥
+        public_key = self.curve.point_multiply(private_key, self.curve.G)
+        
+        # 计算消息哈希
+        e = self._hash_message(message, public_key)
+        
+        # 计算椭圆曲线点
+        point = self.curve.point_multiply(k, self.curve.G)
+        x1 = point.x
+        
+        # 计算r
+        r = (e + x1) % self.curve.n
+        if r == 0 or (r + k) % self.curve.n == 0:
+            raise ValueError("Invalid k value")
+        
+        # 计算s
+        d_inv = BigInt.mod_inv(1 + private_key, self.curve.n)
+        s = (d_inv * (k - r * private_key)) % self.curve.n
+        if s == 0:
+            raise ValueError("Invalid signature")
+        
+        return (r, s)
     
     def verify(self, message: bytes, signature: Tuple[int, int], public_key: Point) -> bool:
         """签名验证"""

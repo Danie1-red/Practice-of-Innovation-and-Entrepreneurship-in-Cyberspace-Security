@@ -6,8 +6,10 @@ SM2算法演示主程序
 用法:
     python main.py basic    # 运行基础实现测试
     python main.py opt      # 运行优化实现测试  
+    python main.py attack   # 运行攻击验证演示（🆕 重要功能）
     python main.py compare  # 运行性能对比
     python main.py all      # 运行所有测试
+    python main.py help     # 显示帮助信息
 """
 
 import sys
@@ -33,6 +35,22 @@ def run_optimized_test():
     test_optimization_features()
     print()
     benchmark_comparison()
+
+def run_attack_verification():
+    """运行攻击验证演示"""
+    print("=" * 50)
+    print("运行SM2攻击验证演示")
+    print("=" * 50)
+    print("🆕 SM2签名算法误用攻击POC验证")
+    print("⚠️  仅用于安全教育和研究目的")
+    print()
+    
+    try:
+        from sm2_attack_poc import run_all_attacks
+        run_all_attacks()
+    except ImportError:
+        print("❌ 无法导入攻击验证模块")
+        print("请确保 sm2_attack_poc.py 文件存在")
 
 def run_comparison():
     """运行性能对比"""
@@ -60,12 +78,16 @@ def main():
             run_basic_test()
         elif command == "opt" or command == "optimized":
             run_optimized_test()
+        elif command == "attack" or command == "poc":
+            run_attack_verification()
         elif command == "compare" or command == "comparison":
             run_comparison()
         elif command == "all":
             run_basic_test()
             print("\n")
             run_optimized_test()
+            print("\n")
+            run_attack_verification()
             print("\n")
             run_comparison()
         elif command == "help" or command == "-h" or command == "--help":
