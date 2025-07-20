@@ -2,14 +2,15 @@
 
 ## 项目概述
 
-本项目实现了 SM2 椭圆曲线数字签名算法的完整技术体系，包括：
+本项目实现了完整的椭圆曲线数字签名算法技术体系，包括：
 
-- **基础实现**：标准的 SM2 数字签名算法
-- **优化实现**：高性能优化版本
-- **攻击验证**：签名算法误用攻击 POC 验证
+- **SM2 基础实现**：国密 SM2 数字签名算法
+- **SM2 优化实现**：高性能优化版本
+- **SM2 攻击验证**：签名算法误用攻击 POC 验证
+- **中本聪数字签名**：🆕 基于 ECDSA-secp256k1 的比特币风格签名系统
 - **安全分析**：完整的数学推导和防护建议
 
-项目展示了从基础实现到高性能优化，再到安全漏洞分析的完整技术路径，适用于密码学学习、安全研究和网络空间安全教育。
+项目展示了从国密算法到国际标准，从基础实现到高性能优化，再到安全漏洞分析的完整技术路径，适用于密码学学习、安全研究和网络空间安全教育。
 
 ## 文件结构
 
@@ -19,19 +20,22 @@
 ├── README.md                            # 项目说明文档
 ├── main.py                              # 主程序入口
 ├── docs/                                # 文档目录
-│   └── SM2_攻击分析与数学推导.md         # 完整的攻击分析文档
+│   ├── SM2_攻击分析与数学推导.md         # SM2攻击分析文档
+│   └── 中本聪数字签名实现文档.md         # 🆕 中本聪签名技术文档
 ├── examples/                            # 示例程序目录
 │   └── demo.py                          # 性能对比演示程序
 ├── src/                                 # 源代码目录
 │   ├── __init__.py                      # Python包初始化文件
 │   ├── sm2_basic.py                     # SM2基础实现
 │   ├── sm2_optimized.py                 # SM2优化实现
-│   └── sm2_attack_poc.py                # SM2攻击POC验证
+│   ├── sm2_attack_poc.py                # SM2攻击POC验证
+│   └── nakamoto_signature.py            # 🆕 中本聪数字签名实现
 └── tests/                               # 测试程序目录
     ├── debug_verify.py                  # 验证调试程序
-    └── test_attack_verification.py      # 攻击验证测试套件
+    ├── test_attack_verification.py      # SM2攻击验证测试套件
+    └── test_nakamoto_signature.py       # 🆕 中本聪签名测试套件
 
-4 directories, 11 files
+4 directories, 13 files
 ```
 
 ## 核心文件说明
@@ -101,7 +105,44 @@
 - 参数校验边界测试
 - 详细的测试报告生成
 
-### 5. demo.py - 性能演示
+### 6. nakamoto_signature.py - 中本聪数字签名（🆕 核心模块）
+
+实现了完整的比特币风格 ECDSA-secp256k1 数字签名：
+
+**核心算法：**
+
+1. **secp256k1 椭圆曲线**（比特币标准曲线）
+2. **ECDSA 签名算法**（椭圆曲线数字签名算法）
+3. **DER 编码格式**（Distinguished Encoding Rules）
+4. **比特币签名格式**（DER + SIGHASH）
+
+**签名特性：**
+
+- 完整的椭圆曲线点运算（点加、倍点、标量乘法）
+- 低 S 规则实施（BIP 66，防止签名延展性）
+- 双重 SHA256 哈希（比特币标准）
+- scriptSig 构造（比特币交易脚本）
+
+**攻击验证：**
+
+- k 值重用攻击演示（完整私钥恢复）
+- 无效曲线攻击理论分析
+- 时序攻击风险评估
+- 参数验证重要性说明
+
+### 7. test_nakamoto_signature.py - 中本聪签名测试套件
+
+提供全面的 ECDSA-secp256k1 测试验证：
+
+- secp256k1 参数正确性验证
+- 密钥生成唯一性测试
+- 签名验证功能测试
+- DER 编码解码测试
+- 比特币签名格式验证
+- k 重用攻击可行性验证
+- 低 S 规则实施检查
+
+### 6. demo.py - 性能演示
 
 提供完整的功能演示和性能对比：
 
@@ -206,7 +247,20 @@ python tests/test_attack_verification.py
 python src/sm2_attack_poc.py
 ```
 
-#### 3. 完整演示
+#### 3. 中本聪数字签名演示（🆕 新功能）
+
+```bash
+# 运行中本聪数字签名演示
+python main.py nakamoto
+
+# 运行中本聪签名测试套件
+python tests/test_nakamoto_signature.py
+
+# 单独运行中本聪签名
+python src/nakamoto_signature.py
+```
+
+#### 4. 完整演示
 
 ```bash
 # 运行所有功能演示
@@ -370,6 +424,104 @@ SM2签名: r2=0xc87a00a0e62f6bd58d0fcee6ef3ee604b58f91ed6b9b34b2d965af251c19bd9c
 🔓 恢复的私钥: 0xb734e985626fa4ba461a81f5f8fd31c0aeee6c48be78bd9d78e849934a5c1831
 💣 原始私钥: 0xb734e985626fa4ba461a81f5f8fd31c0aeee6c48be78bd9d78e849934a5c1831
 ✅ 跨算法攻击成功！私钥完全恢复
+```
+
+### 中本聪数字签名运行示例 (`python main.py nakamoto`)
+
+#### ECDSA-secp256k1 签名演示
+
+```
+================================================================================
+中本聪数字签名演示 (ECDSA-secp256k1)
+================================================================================
+
+=== 1. 密钥生成 ===
+私钥 d: 0x5ed5b4143c5d41bac20d991b0f17067a4b81d8bc05944903d6d7e47e547155c6
+公钥 Q: (0xba47616dbd8939cd2bb92775697c28049e56d413d610d3995189684e0e65013e, 0xb789dfe52115cc48b7317deede5133ae7e5b1fc69365fda606582284de15dd32)
+公钥验证: ✅ 在secp256k1曲线上
+
+=== 2. 比特币交易构造 ===
+交易数据: Bitcoin transaction: Alice sends 1.5 BTC to Bob
+交易哈希: 2f41257ba338c0885715b1c41e5c41660934cc74a6fb493d15fbe785df1625f0
+
+=== 3. ECDSA签名生成 ===
+签名 r: 0xe1fa2ae9221cf6c488f82bb10fb18cf4012a16efca7245482fd72fc8f4b81737
+签名 s: 0x77b5cc4ab6e513fccded43c6d3677e6bec5475c8f72c463e1a0eb519a93bd3bf
+低S规则: ✅ s <= n/2
+
+=== 4. DER编码格式 ===
+DER编码: 3045022100e1fa2ae9221cf6c488f82bb10fb18cf4012a16efca7245482fd72fc8f4b81737022077b5cc4ab6e513fccded43c6d3677e6bec5475c8f72c463e1a0eb519a93bd3bf
+DER长度: 71 字节
+
+=== 5. 比特币签名格式 ===
+完整签名: 304402201b4e9cc97e28c7fb681d8526dddec7db4b2dbda3526556d9ef911b5fa24e86180220576bb6fa3b04bc2ad90bb947ba9fc2580c3858bbeb361c68259b89f797a7cf2b01
+SIGHASH类型: 0x01 (SIGHASH_ALL)
+
+=== 6. 签名验证 ===
+ECDSA验证: ✅ 通过
+比特币签名验证: ✅ 通过
+
+=== 7. scriptSig构造 ===
+公钥编码: 04ba47616dbd8939cd2bb92775697c28049e56d413d610d3995189684e0e65013eb789dfe52115cc48b7317deede5133ae7e5b1fc69365fda606582284de15dd32
+scriptSig: <304402201b4e9cc97e28c7fb681d8526dddec7db4b2dbda3526556d9ef911b5fa24e86180220576bb6fa3b04bc2ad90bb947ba9fc2580c3858bbeb361c68259b89f797a7cf2b01> <04ba47...dd32>
+```
+
+#### k 重用攻击演示
+
+```
+=== 攻击1: 随机数k重用攻击 ===
+受害者私钥: 0x3d2ebebda6556f786bf629671f5e6d13835ac8bf36eab679a79a2aaa89149756
+受害者公钥: (0x9de94bc5588d7bba9c9b8387922b2ef8aeb1c5a4b94e3bd684061ef024655906, 0x4e402d17f8d04922aae7f0f6f8dfc3bc3da5ee112083c5baa9bb460b1f9f124a)
+重用的k值: 0x35e2c02273b467efa6e965e911dee09ae0a33c3529607638a9f151f9c2714fdc
+消息1: Message 1: I will pay Alice 1 BTC
+消息2: Message 2: I will pay Bob 2 BTC
+
+签名1: r=0xe441b3b408307fe53db530da758841904de386d82b3f4a2cb536f0cf7d8af62c, s=0xafee84d786488c44524ad4b7a5fddc20a10c8abc3cb052bcdaf9ac6c8c2c01ca
+签名2: r=0xe441b3b408307fe53db530da758841904de386d82b3f4a2cb536f0cf7d8af62c, s=0x6e4333fd42fdd818fb39e7bc4b5f2523516503665f92313e4d7a451fcbad7838
+注意: 两个签名的r值相同！这是攻击线索
+
+🎯 开始攻击...
+根据ECDSA数学原理:
+s1 = k^(-1) * (z1 + r*d) mod n
+s2 = k^(-1) * (z2 + r*d) mod n
+可得: k = (z1 - z2) / (s1 - s2) mod n
+然后: d = (s1*k - z1) / r mod n
+
+🔓 恢复的k: 0x35e2c02273b467efa6e965e911dee09ae0a33c3529607638a9f151f9c2714fdc
+🔓 恢复的私钥: 0x3d2ebebda6556f786bf629671f5e6d13835ac8bf36eab679a79a2aaa89149756
+💣 原始私钥: 0x3d2ebebda6556f786bf629671f5e6d13835ac8bf36eab679a79a2aaa89149756
+✅ 攻击成功！私钥完全恢复
+```
+
+### 中本聪签名测试报告 (`python tests/test_nakamoto_signature.py`)
+
+```
+================================================================================
+中本聪数字签名综合测试
+================================================================================
+总测试数: 7
+成功测试: 7
+失败测试: 0
+成功率: 100.0%
+
+详细测试结果:
+--------------------------------------------------------------------------------
+✅ secp256k1参数验证 [23:43:54]
+   基点在曲线上: True, 基点阶正确: True
+✅ 密钥生成测试 [23:43:54]
+   生成5个密钥对, 私钥唯一: True, 公钥唯一: True
+✅ 签名验证测试 [23:43:55]
+   测试5条消息, 通过: 5
+✅ DER编码测试 [23:43:55]
+   编码正确: True, 解码验证: True, DER长度: 70
+✅ 比特币签名格式测试 [23:43:55]
+   比特币签名验证: True, 错误签名拒绝: True, 签名长度: 72
+✅ k重用攻击测试 [23:43:55]
+   私钥恢复: True, k值恢复: True
+✅ 低S规则测试 [23:43:57]
+   测试50个签名, 低S规则符合: 50/50
+
+🏆 所有测试完美通过！中本聪数字签名实现完全正确
 ```
 
 ### 完整测试报告 (`python tests/test_attack_verification.py`)
@@ -596,6 +748,38 @@ attack_poc.attack_k_reuse_same_user()
 print("\n=== 跨算法攻击演示 ===")
 attack_poc.demonstrate_cross_algorithm_attack()
 
+# 🆕 中本聪数字签名示例
+from nakamoto_signature import NakamotoSignature
+
+# 创建中本聪签名实例
+nakamoto = NakamotoSignature()
+
+# 生成密钥对
+btc_private_key, btc_public_key = nakamoto.generate_keypair()
+
+# 模拟比特币交易
+transaction = b"Alice sends 1.5 BTC to Bob"
+tx_hash = nakamoto.double_sha256(transaction)
+
+# ECDSA签名
+r, s = nakamoto.sign(tx_hash, btc_private_key)
+print(f"ECDSA签名: r={hex(r)}, s={hex(s)}")
+
+# 比特币签名格式
+bitcoin_signature = nakamoto.create_bitcoin_signature(tx_hash, btc_private_key)
+print(f"比特币签名: {bitcoin_signature.hex()}")
+
+# 签名验证
+ecdsa_valid = nakamoto.verify(tx_hash, (r, s), btc_public_key)
+bitcoin_valid = nakamoto.verify_bitcoin_signature(tx_hash, bitcoin_signature, btc_public_key)
+print(f"ECDSA验证: {'通过' if ecdsa_valid else '失败'}")
+print(f"比特币签名验证: {'通过' if bitcoin_valid else '失败'}")
+
+# 🆕 攻击演示（教育目的）
+print("\n=== k重用攻击演示 ===")
+attack_result = nakamoto.demonstrate_signature_forgery_attack()
+print(f"攻击成功: {'是' if attack_result['attack_success'] else '否'}")
+
 # 运行完整攻击验证测试
 print("\n=== 完整攻击验证 ===")
 from tests.test_attack_verification import AttackVerificationTests
@@ -768,14 +952,17 @@ tester.run_comprehensive_test()
 
 ### 核心技术成果
 
-| 技术模块      | 实现状态 | 说明                   |
-| ------------- | -------- | ---------------------- |
-| 基础 SM2 算法 | ✅ 完成  | 完整的三层架构实现     |
-| 性能优化      | ✅ 完成  | NAF 编码、预计算表等   |
-| 🆕 k 重用攻击 | ✅ 完成  | 100%私钥恢复成功率     |
-| 🆕 跨算法攻击 | ✅ 完成  | ECDSA-SM2 共享参数攻击 |
-| 🆕 延展性分析 | ✅ 完成  | SM2 抗延展性特性验证   |
-| 🆕 安全测试   | ✅ 完成  | 自动化攻击验证框架     |
+| 技术模块      | 实现状态 | 说明                        |
+| ------------- | -------- | --------------------------- |
+| 基础 SM2 算法 | ✅ 完成  | 完整的三层架构实现          |
+| 性能优化      | ✅ 完成  | NAF 编码、预计算表等        |
+| 🆕 k 重用攻击 | ✅ 完成  | 100%私钥恢复成功率          |
+| 🆕 跨算法攻击 | ✅ 完成  | ECDSA-SM2 共享参数攻击      |
+| 🆕 延展性分析 | ✅ 完成  | SM2 抗延展性特性验证        |
+| 🆕 安全测试   | ✅ 完成  | 自动化攻击验证框架          |
+| 🆕 中本聪签名 | ✅ 完成  | ECDSA-secp256k1 完整实现    |
+| 🆕 比特币格式 | ✅ 完成  | DER 编码+SIGHASH 标准格式   |
+| 🆕 k 重用演示 | ✅ 完成  | ECDSA k 重用攻击 100%成功率 |
 
 ### 攻击验证价值（🆕 核心贡献）
 
