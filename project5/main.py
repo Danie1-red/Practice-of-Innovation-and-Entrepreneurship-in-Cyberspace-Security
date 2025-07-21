@@ -4,13 +4,26 @@
 SM2算法演示主程序
 
 用法:
-    python main.py basic    # 运行基础实现测试
-    python main.py opt      # 运行优化实现测试  
-    python main.py attack   # 运行攻击验证演示（🆕 重要功能）
-    python main.py nakamoto # 运行中本聪数字签名演示（🆕 新功能）
-    python main.py compare  # 运行性能对比
-    python main.py all      # 运行所有测试
-    python main.py help     # 显示帮助信息
+    python main.py basic         # 运行基础实现测试
+    python main.py opt           # 运行优化实现测试  
+    python main.py attack        # 运行攻击验证演示（🆕 重要功能）
+    python main.py nakamoto      # 运行中本聪数字签名演示（🆕 新功能）
+    python main.py forge_nakamoto # 🔐 完整伪造演示（8场景+高级分析+教育指南）
+    python main.py compare       # 运行性能对比
+    python main.py all           # 运行所有测试
+    python main.py help          # 显示帮助信息
+
+🔐 中本聪签名伪造演示功能：
+    • 场景1：模拟创建"假中本聪"身份
+    • 场景2：用假身份签名经典消息（8条）
+    • 场景3：构造比特币风格scriptSig
+    • 场景4：演示为什么这是"伪造"
+    • 场景5：真实攻击的技术难点分析
+    • 场景6：防护机制和检测方法
+    • 场景7：统计分析和教育总结
+    • 高级场景：多重身份、时间戳、关联性分析
+
+⚠️  伪造演示仅用于密码学安全教育，严禁用于任何非法用途！
 """
 
 import sys
@@ -75,6 +88,42 @@ def run_nakamoto_signature():
         import traceback
         traceback.print_exc()
 
+def run_forge_nakamoto_signature():
+    """模拟伪造中本聪数字签名（仅用于学习研究）"""
+    print("=" * 50)
+    print("模拟伪造中本聪数字签名（仅用于学习研究）")
+    print("=" * 50)
+    print("⚠️  本功能仅用于密码学安全教育和研究，禁止用于任何非法用途！")
+    print()
+    try:
+        from nakamoto_signature import NakamotoSignature, Secp256k1, ECPoint
+        nakamoto = NakamotoSignature()
+        # 假设我们知道一个公钥Q（比如比特币创世块公钥）
+        # 这里用随机生成的密钥对模拟“中本聪公钥”
+        fake_priv, fake_pub = nakamoto.generate_keypair()
+        print(f"假冒中本聪公钥: (\n  x={hex(fake_pub.x)},\n  y={hex(fake_pub.y)})")
+        print(f"假冒中本聪私钥(仅演示): {hex(fake_priv)}")
+        # 伪造一条消息
+        message = b"I am Satoshi Nakamoto."
+        msg_hash = nakamoto.double_sha256(message)
+        # 用假私钥对消息签名
+        r, s = nakamoto.sign(msg_hash, fake_priv)
+        der_sig = nakamoto.encode_der(r, s)
+        print(f"伪造签名DER: {der_sig.hex()}")
+        # 验证签名（应通过）
+        valid = nakamoto.verify(msg_hash, (r, s), fake_pub)
+        print(f"伪造签名验证: {'通过' if valid else '失败'}")
+        print("\n伪造签名内容:")
+        print(f"消息: {message}")
+        print(f"签名: r={hex(r)}, s={hex(s)}")
+        print(f"公钥: (x={hex(fake_pub.x)}, y={hex(fake_pub.y)})")
+        print(f"DER签名: {der_sig.hex()}")
+        print("\n⚠️  这只是模拟伪造，真实比特币网络不会承认该签名！")
+    except Exception as e:
+        print(f"❌ 伪造过程中发生错误: {e}")
+        import traceback
+        traceback.print_exc()
+
 def run_attack_verification():
     """运行攻击验证演示"""
     print("=" * 50)
@@ -121,6 +170,17 @@ def main():
             run_attack_verification()
         elif command == "nakamoto" or command == "bitcoin":
             run_nakamoto_signature()
+        elif command == "forge_nakamoto":
+            # 新增的伪造演示功能
+            try:
+                forge_sys_path = os.path.join(os.path.dirname(__file__), 'src')
+                if forge_sys_path not in sys.path:
+                    sys.path.insert(0, forge_sys_path)
+                from nakamoto_forgery import main as run_forgery_main
+                run_forgery_main()
+            except ImportError as e:
+                print(f"❌ 无法导入伪造演示模块: {e}")
+                print("请确保 src/nakamoto_forgery.py 文件存在")
         elif command == "compare" or command == "comparison":
             run_comparison()
         elif command == "all":
@@ -131,6 +191,8 @@ def main():
             run_attack_verification()
             print("\n")
             run_nakamoto_signature()
+            print("\n")
+            run_forge_nakamoto_signature()
             print("\n")
             run_comparison()
         elif command == "help" or command == "-h" or command == "--help":
