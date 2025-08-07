@@ -20,9 +20,11 @@
 ├── .gitignore                           # Git忽略文件配置
 ├── README.md                            # 项目说明文档（包含完成报告）
 ├── main.py                              # 主程序入口
-├── docs/                                # 文档目录
-│   ├── SM2_攻击分析与数学推导.md         # SM2攻击分析文档
-│   └── 中本聪数字签名实现文档.md         # 🆕 中本聪签名技术文档
+├── SM2攻击分析与数学推导.md              # SM2攻击分析文档
+├── 中本聪数字签名实现文档.md              # 中本聪签名技术文档
+├── sm2_basic.py                         # SM2基础实现（兼容性）
+├── sm2_optimized.py                     # SM2优化实现（兼容性）
+├── sm2_optimized_advanced.py            # SM2高级优化实现
 ├── examples/                            # 示例程序目录
 │   └── demo.py                          # 性能对比演示程序
 ├── src/                                 # 源代码目录
@@ -30,14 +32,14 @@
 │   ├── sm2_basic.py                     # SM2基础实现
 │   ├── sm2_optimized.py                 # SM2优化实现
 │   ├── sm2_attack_poc.py                # SM2攻击POC验证
-│   ├── nakamoto_signature.py            # 🆕 中本聪数字签名实现 (680行)
-│   └── nakamoto_forgery.py              # 🔐 签名伪造演示模块 (370行)
+│   ├── nakamoto_signature.py            # 中本聪数字签名实现 (680行)
+│   └── nakamoto_forgery.py              # 签名伪造演示模块 (370行)
 └── tests/                               # 测试程序目录
     ├── debug_verify.py                  # 验证调试程序
     ├── test_attack_verification.py      # SM2攻击验证测试套件
-    └── test_nakamoto_signature.py       # 🆕 中本聪签名测试套件 (404行)
+    └── test_nakamoto_signature.py       # 中本聪签名测试套件 (404行)
 
-4 directories, 13 files
+3 directories, 17 files
 ```
 
 ## 核心文件说明
